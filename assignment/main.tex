@@ -1,0 +1,465 @@
+\documentclass[11pt]{article}
+\input{packages.tex}
+
+\begin{document}
+ 
+\begin{center}
+    {\LARGE \textbf{CS376 Computer Vision: Homework 2}}
+\end{center}
+
+\section*{Instructions}
+\begin{itemize}
+    \item This homework is \textbf{due at 23:59 on Wednesday February 18th, 2026}.
+     \item The submission must include two files to canvas:
+    \begin{enumerate}
+        \item Submit a \texttt{zip} file of all of your code. \\
+        \textcolor{red}{\textbf{We have indicated questions where you have to do something in code in red.}} \\
+        Your \texttt{zip} file should contain a single directory which has the same name as your \texttt{EID}. \\
+        If your EID is ab12345, then the zip file should contain a single folder \texttt{ab12345/} containing all required files. \\
+        \textbf{What should I submit?}
+        %We provide a script that validates the submission format \href{https://example.com}{here}. 
+        Please check the \texttt{README.md} file of the \texttt{auto\_grade} folder for a more comprehensive list of files expected for submission.
+        If we don’t ask you for it, you don’t need to submit it; while you should clean up the directory, don’t panic about having an extra file or two.
+        
+        \item A \texttt{pdf} file as your write-up, including your answers to all the questions and key choices you made. \\
+        \textcolor{blue}{\textbf{We have indicated questions where you have to do something in the report in blue.}} \\
+        You might like to combine several files to make a submission. Here is an example online link for combining multiple PDF files: \href{https://combinepdf.com/}{https://combinepdf.com/}. \\
+        The write-up must be an electronic version. \textbf{No handwriting, including plotting questions.} \LaTeX{} is recommended but not mandatory.
+    \end{enumerate}
+\end{itemize}
+
+\section*{Python Environment}
+We are using Python 3.12 for this course. You can find references for the Python standard library \href{https://docs.python.org/3.12/library/index.html}{here}. To make your life easier, we recommend you to install Anaconda for Python 3.12.x (\href{https://www.anaconda.com/download/}{https://www.anaconda.com/download/}). This is a Python package manager that includes most of the modules you need for this course.
+
+\textbf{We will make use of the following packages extensively in this course:}
+\begin{itemize}
+    \item \href{https://numpy.org/doc/stable/user/quickstart.html}{Numpy}
+    \item \href{https://scipy.org/}{SciPy}
+    \item \href{https://matplotlib.org/stable/tutorials/pyplot.html#sphx-glr-tutorials-pyplot-py}{Matplotlib}
+\end{itemize}
+
+If you are using the CS machines to run your code, you can access a working python environment:
+
+\begin{lstlisting}[language=bash]
+source /lusr/opt/miniconda/bin/activate cs376-cpu
+\end{lstlisting}
+
+This will make sure you are using the right version of each dependency, so that you don't need to worry about using different package versions.
+We will also run your code using this environment.
+
+
+\newpage
+\section{Patches [8 pts]}
+
+\noindent
+\textbf{Task 1: Image Patches (8 pts)} A patch is a small piece of an image. Sometimes we will focus on the patches of an image instead of operating on the entire image itself.
+
+\begin{enumerate}
+    \item \textbf{\textcolor{red}{Coding 1.1 - Complete the function}} \texttt{image\_patches} in \texttt{filters.py}. This should divide a grayscale image into a set of non-overlapping 16 by 16 pixel image patches. Normalize each patch to have zero mean and unit variance.
+
+    \textbf{\textcolor{blue}{Report 1.1 - Plot and put in your report}} three image patches $16\times16$ from the grayscale image \texttt{grace\_hopper.png}. (3 pts)
+
+    \item \textbf{\textcolor{blue}{Report 1.2 - Discuss in your report}} in 2-3 sentences why you think it is good for the patches to have zero mean. (2 pts)
+
+    \textit{Hint:} Suppose you want to measure the similarity between patches by computing the dot products between different patches to find a match. Think about how the patch values and the resulting similarity obtained by taking dot products would be affected under different lighting/illumination conditions. Say in one case a value of dark corresponds to 0 whereas bright corresponds to 1. In another scenario, a value of dark corresponds to -1 whereas bright corresponds to 1. Which one would be more appropriate to measure similarity using dot products?
+
+    \item Early work in computer vision used patches as descriptions of local image content for applications ranging from image alignment and stitching to object classification and detection.
+
+    \textbf{\textcolor{blue}{Report 1.3 - Discuss in your report}} in 2-3 sentences why the patches from the previous question would be good or bad for things like matching or recognizing an object. Consider how those patches would look like if we changed the object's pose, scale, illumination, etc. (3 pts)
+\end{enumerate}
+
+\section{Image Filtering [46 pts]}
+
+\textbf{Foreword:} There's a difference between convolution and cross-correlation: in cross-correlation, you compute the dot product (i.e., \texttt{np.sum(F*I[yl:y2,x1:x2])}) between the kernel/filter and each window/patch in the image; in convolution, you compute the dot product between the \textit{flipped} kernel/filter and each window/patch in the image. We'd like to insulate you from this annoying distinction, but we also don't want to teach you the wrong stuff. So we'll split the difference by pointing where you have to pay attention.
+
+We'll make this more precise in 1D: assume the input/signal \textit{f} has \textit{N} elements (i.e., is indexed by \textit{i} for $0 \leq i < N$) and the filter/kernel \textit{g} has \textit{M} elements (i.e., is indexed by \textit{j} for $0 \leq j < M$). In all cases below, you can assume zero-padding of the input/signal \textit{f}.
+
+\textbf{1D Cross-correlation/Filtering:} The examples given in class and what most people think of when it comes to filtering. Specifically, 1D cross-correlation/filtering takes the form:
+
+\begin{equation}
+    h[i] = \sum_{j=0}^{M-1} g[j] f[i+j],
+\end{equation}
+
+where each entry \textit{i} is the sum of all the products between the filter at \textit{j} and the input at \textit{i + j} for all valid \textit{j}. If you want to think of doing this in terms of matrix products, you can think of this as $h_i = g^T f_{i:i+M-1}$. Of the two options, this tends to be more intuitive to most people.
+
+\textbf{1D Convolution: }When we do 1D convolution, on the other hand, we re-order the filter last-to-first, and then do filtering. In signal processing, this is usually reasoned about by index trickery. By definition, 1D convolution takes the form:
+
+\begin{equation}
+    (f * g)[i] = \sum_{j=0}^{M-1} g[M - j - 1] f[i + j], 
+\end{equation}
+
+which is uglier since we start at 0 rather than 1. You can verify that as $j$ goes $0 \to (M-1)$, the new index $(M-j-1)$ goes $(M-1) \to 0$. Rather than deal with annoying indices, if you’re given a filter to apply and asked to do convolution, you can simply do the following: $(1)$ At the start of the function and only once, compute $g = g[::-1]$ if it’s 1D or $G = G[::-1,::-1]$ if it’s 2D. $(2)$ Perform filtering with this flipped filter.
+
+
+The reason for the fuss is that convolution is commutative $(f * g = g * f)$ and associative $((f * g) * h = f * (g * h))$. As you chain filters together, it is nice to know things like that $(a * b) * c = (c * a) * b$ for all $a, b, c$. Cross-correlation/filtering does not satisfy these properties.
+
+You should watch for this in three crucial places:
+
+\begin{itemize}
+    \item {When implementing convolution in Task 2(b):} in the function \texttt{convolve()} in \texttt{filters.py}.
+    \item {When dealing with non-symmetric filters:} like directional derivatives $[-1, 0, 1]$. A symmetric filter (like the Gaussian) is unaffected by the distinction because if you flip it horizontally/vertically, it’s the same. For asymmetric filters, you can get different results. In the case of the directional derivatives, this flips the sign. This can produce outputs that have flipped signs or give you answers to questions that are nearly right but need to be multiplied by $-1$.
+    \item {In later homework:} when you implement a convolutional neural network. Despite their name, these networks actually do cross-correlation. Argh! It’s annoying.
+\end{itemize}
+
+Here’s my key: if you’re trying to produce a picture that looks clean and noise-free or you’re talking to someone who talks about sampling rates, “convolution” is the kind of convolution where you reverse the filter order. If you’re trying to recognize puppies or you’re talking to someone who doesn’t frequently say signal, then “convolution” is almost certainly filtering/cross-correlation.
+
+\vspace{1em}
+
+\noindent
+\textbf{Task 2: Convolution and Gaussian Filter (22 pts)}
+\begin{enumerate}[label=(\alph*)]
+    \item \textbf{Gaussian Filters:} A Gaussian filter has filter values that follow the Gaussian probability distribution. Specifically, the values of the filter are:
+
+\begin{equation}
+    \text{1D Kernel: } G(x) = \frac{1}{\sqrt{2 \pi \sigma^2}} \exp\left(\frac{-x^2}{2\sigma^2}\right), \quad \text{2D Kernel: } G(x, y) = \frac{1}{2 \pi \sigma^2} \exp\left(\frac{-(x^2 + y^2)}{2\sigma^2}\right).
+\end{equation}
+4
+Here, 0 is the center of the filter (in both 1D and 2D), and $\sigma$ is a free parameter that controls how much blurring takes place. One thing that makes lots of operations fast is that applying a 2D Gaussian filter to an image can be done by applying two 1D Gaussian filters, one vertical and the other horizontal.
+
+\textbf{\textcolor{blue} {Report 2.1 - Show in your report}} that a convolution by a 2D Gaussian filter is equivalent to sequentially applying a vertical and horizontal Gaussian filter. (4 pts)
+
+\textit{Advice:} Pick a particular filter size \textit{k}. From there, define a 2D Gaussian filter $G \in \mathbb{R}^{k \times k}$ and two Gaussian filters $G_y \in \mathbb{R}^{k \times 1}$ and $G_x \in \mathbb{R}^{1 \times k}$. A useful fact that you can use is that for any \textit{k}, any vertical filter \(X \in \mathbb{R}^{k \times 1}\) and any horizontal filter \(Y \in \mathbb{R}^{1 \times k}\), the convolution \(X \ast Y\) is equal to \(XY\). Expanded out for \(k = 3\), this just means:
+
+\[
+\begin{bmatrix}
+X_1 \\
+X_2 \\
+X_3
+\end{bmatrix}
+\ast
+\begin{bmatrix}
+Y_1 & Y_2 & Y_3
+\end{bmatrix}
+=
+\begin{bmatrix}
+X_1Y_1 & X_1Y_2 & X_1Y_3 \\
+X_2Y_1 & X_2Y_2 & X_2Y_3 \\
+X_3Y_1 & X_3Y_2 & X_3Y_3
+\end{bmatrix}
+\]
+
+You may find it particularly useful to use the fact that \(Y \ast Y^T = YY^T\) and that convolution is associative. Look at individual elements. If you do this correctly, the image does not have to be involved at all.
+
+If you have not had much experience with proofs or need a refresher, \href{https://sites.lsa.umich.edu/kesmith/wp-content/uploads/sites/1309/2024/06/ProofTechniqueDocument.pdf}{this guide} will help you get started. Here is another \href{https://artofproblemsolving.com/blog/articles/how-to-write-a-solution}{link} that will help you write readable and easy-to-follow solutions. But in general, the key isn’t formality, but just being precise.
+
+    \item \textbf{\textcolor{red}{Coding 2.1 - Complete the function:}} Implement the function \texttt{convolve()} in \texttt{filters.py}. Be sure to implement convolution and not cross-correlation/filtering (i.e., flip the kernel as soon as you get it). For consistency purposes, please use zero-padding when implementing convolution. (5 pts)
+
+    \textit{Advice:} You can use \texttt{scipy.ndimage.convolve()} to check your implementation. For zero-padding use \texttt{mode=`constant`}. Refer to documentation for details. For Part 3 Feature Extraction and Part 4 Blob Detection, directly use scipy’s convolution function with the same settings, ensuring zero-padding.
+
+    \item \textbf{\textcolor{blue}{Report 2.2 - Plot the following output and put it in your report}} and then describe what Gaussian filtering does to the image in one sentence. Load the image \texttt{grace\_hopper.png} as the input and apply a Gaussian filter that is \(3 \times 3\) with a standard deviation of \(\sigma = 0.572\). (3 pts)
+
+
+    \item \textbf{\textcolor{blue}{Report 2.3 - Discuss in your report (optional – no credit)}} in 2-3 sentences. Why is it a good idea for a smoothing filter to sum up to 1?
+
+    \textit{Advice:} As an experiment to help deduce why, observe that if you sum all the values of the Gaussian filter in (c), you should get a sum close to 1. If you are very particular about this, you can make it exactly sum to 1 by dividing all filter values by their sum. When this filter is applied to \texttt{grace\_hopper.png}, what are the output intensities (min, max, range)? Now consider a Gaussian filter of size \(3 \times 3\) and standard deviation \(\sigma = 2\) (but do not force it to sum to 1 – just use the values). Calculate the sum of all filter values in this case. What happens to the output image intensities in this case? If you are trying to plot the resulting images using \texttt{matplotlib.pyplot} to compare the effects, set \texttt{vmin = 0} and \texttt{vmax = 255} to observe the difference.
+
+    \item \textbf{ {Consider the image as a function \(I(x, y)\):}} When working on edge detection, we often pay a lot of attention to the derivatives. Denote the “derivatives”:
+
+      \[
+I_x(x, y) = I(x + 1, y) - I(x - 1, y) \approx 2 \frac{\partial I}{\partial x}(x, y)
+    \]
+    \[
+I_y(x, y) = I(x, y + 1) - I(x, y - 1) \approx 2 \frac{\partial I}{\partial y}(x, y)
+    \]
+
+
+    The \(I_x\) is the twice the derivative and thus off by a factor of 2. This scaling factor is not a concern since the units of the image are made up. So long as you are consistent, things are fine.
+    
+
+
+\noindent \textbf{\textcolor{blue}{Report 2.4 - Derive in your report}} the convolution kernels for derivatives (5 pts):
+\begin{enumerate}[label=(\roman*)]
+    \item \(k_x \in \mathbb{R}^{1 \times 3}: I_x = I \ast k_x\)
+    \item \(k_y \in \mathbb{R}^{3 \times 1}: I_y = I \ast k_y\)
+\end{enumerate}
+
+    \item Follow the detailed instructions in \texttt{filters.py} and \textbf{\textcolor{red}{complete the function (Coding 2.2)}} \texttt{edge\_detection()} in \texttt{filters.py}, whose output is the gradient magnitude. (3 pts)
+    
+    \item Use the original image and the Gaussian-filtered image as inputs respectively and use the function \texttt{edge\_detection()} to get their gradient magnitudes. \textbf{\textcolor{blue}{Report 2.5 - Plot both outputs and put them in your report (2 pts). Discuss in your report  (optional – no credit)}} the difference between the two images in no more than three sentences.
+\end{enumerate}
+
+
+\noindent
+\textbf{Task 3: Sobel Operator (12 pts)} The Sobel operator is often used in image processing and computer vision.
+
+\begin{enumerate}[label=(\alph*)]
+    \item The Sobel filters $S_x$ and $S_y$ are given below and are related to a particular Gaussian kernel $G_S$:
+\[
+S_x = 
+\begin{bmatrix}
+1 & 0 & -1 \\
+2 & 0 & -2 \\
+1 & 0 & -1
+\end{bmatrix},
+\quad
+S_y = 
+\begin{bmatrix}
+1 & 2 & 1 \\
+0 & 0 & 0 \\
+-1 & -2 & -1
+\end{bmatrix},
+\quad
+G_S = 
+\begin{bmatrix}
+1 & 2 & 1 \\
+2 & 4 & 2 \\
+1 & 2 & 1
+\end{bmatrix}.
+\]
+    
+    
+    \textbf{\textcolor{blue} {Report 3.1 - Show in your report the following result: (optional – no credit)}} If the input image is \(I\) and we use \(G_S\) as our Gaussian filter, taking the horizontal-derivative (i.e., \(\frac{\partial}{\partial x} I(x, y)\)) of the Gaussian-filtered image, can be approximated by applying the Sobel filter (i.e., computing \(I \ast S_x\)).
+
+    \textit{Advice:} You should use the horizontal filter \(k_x\) that you derived previously – in particular, the horizontal derivative of the Gaussian-filtered image is \((I \ast G_S) \ast k_x\). You can take advantage of properties of convolution so that you only need to show that two filters are the same. If you do this right, you can completely ignore the image.
+
+    \item \textbf{\textcolor{red}{Coding 3.1 - Complete the function} \texttt{sobel\_operator()} in \texttt{filters.py}} with the kernels/filters given previously. (6 pts)
+
+    \item \textbf{\textcolor{blue} {Report 3.2 - Plot the following and put them in your report:}} \(I \ast S_x\), \(I \ast S_y\), and the gradient magnitude, with the image \texttt{grace\_hopper.png} as the input image \(I\). (6 pts)
+\end{enumerate}
+
+\noindent
+\textbf{Task 4: LoG Filter (12 pts)} The Laplacian of Gaussian (LoG) operation is important in computer vision.
+
+\begin{enumerate}[label=(\alph*)]
+    \item In \texttt{filters.py}, you are given two LoG filters. You are not required to show that they are LoG, but you are encouraged to know what an LoG filter looks like. \textbf{\textcolor{blue} {Report 4.1 - Include in your report, the following:}} the outputs of these two LoG filters and the reasons for their difference. \textbf{\textcolor{blue}{Discuss in your report}} whether these filters can detect edges. Can they detect anything else? (4 pts)
+
+    \textit{Advice:} By detected regions we mean pixels where the filter has a high \textit{absolute response}.
+
+        \item Instead of calculating a LoG, we can often approximate it with a simple Difference of Gaussians (DoG). Specifically many systems in practice compute their "Laplacian of Gaussians" by computing \((I \ast G_{k\sigma}) - (I \ast G_{\sigma})\) where \(G_{\sigma}\) denotes a Gaussian filter with a standard deviation of \(\sigma\) and \(k > 1\) (but is usually close to $1$). If we want to compute the LoG for many scales, this can be far faster -- rather than apply a large filter to get the LoG, one can get it for free by repeatedly blurring the image with little kernels.
+
+    \textbf{\textcolor{blue}{Report 4.2 - Discuss in your report why computing \((I \ast G_{k\sigma}) - (I \ast G_{\sigma})\) might successfully roughly approximate convolution by the Laplacian of Gaussian. You should include a plot or two showing filters in your report.}} To help understand this, we provide three 1D filters with 501 entries in \texttt{log1d.npz}. Load these with \texttt{data = np.load('log1d.npz')}. There is a LoG filter with \(\sigma = 50\) in variable \texttt{data['log50']}, and Gaussian filters with \(\sigma = 50\) and \(\sigma = 53\) in \texttt{data['gauss50']} and \texttt{data['gauss53']} respectively. You can look at these using matplotlib via \texttt{plt.plot(filter)} which will show you a nice line plot. You should assume these are representative samples of filters and that things generalize to 2D. (8 pts)
+
+\textit{Advice:} Try visualizing the following functions: two Gaussian functions with different variances, the difference between the two functions, the Laplacian of a Gaussian function. To explain why it works, remember that convolution is linear: \(A \ast C + B \ast C = (A + B) \ast C\).
+\end{enumerate}
+
+% \begin{figure}[h!]
+%     \centering
+%     \includegraphics[width=0.8\textwidth]{figures/figure_1.png}
+%     \caption{Outputs from filtermon/filtermon.py. If you put the right filter in, your outputs will match the reference output.}
+%     \label{fig:filtermon_outputs}
+% \end{figure}
+
+% \noindent
+% \textbf{Task 5: Who's That Filter? (7 pts)} In \texttt{filtermon/}, we’ve provided you with an image and its output for five different \(3 \times 3\) filters. The zeroth filter (the identity \(\begin{bmatrix} [0, 0, 0], [0, 1, 0], [0, 0, 0] \end{bmatrix}\)) has been correctly put into the code, and so its convolution with the image will match. Update \texttt{filter1} through \texttt{filter4}; the code will check your answers.
+
+% \begin{enumerate}[label=(\alph*)]
+%     \item \textbf{\textcolor{blue} {Report 5.1 - Write out each of the four remaining filters.}} No need to format them prettily; something like \texttt{[[0,0,0], [0,1,0], [0,0,0]]} works. (5 pts)
+
+%     \textit{Advice:} Watch out that the code does convolution. If you guess the filter based on the output, remember that the filter that gets used will be horizontally and vertically flipped/reflected! All filters look similar to filters that have been shown in class (although will not match precisely).
+
+%     \item \textbf{\textcolor{blue}{Report 5.2 - What does filter 1 do, intuitively and how does it differ from filter 2?}} (2 pts)
+% \end{enumerate}
+
+\newpage
+\section{Feature Extraction (22 pts)}
+
+This question looks long, but that is only because there is a fairly large amount of walk-through and formalizing topics. The resulting solution, if done properly, is certainly under 10 lines. If you use filtering, please use \texttt{scipy.ndimage.convolve()} to perform convolution whenever you want to use it. Please use \textbf{zero padding} for consistency purposes (Set \texttt{mode=`constant'}).
+
+\textbf{Foreword:} While edges can be useful, corners are often more informative features as they are less common. In this section, we implement a Harris Corner Detector (see: \url{https://en.wikipedia.org/wiki/Harris_Corner_Detector}) to detect corners. \textit{Corners are defined as locations \((x, y)\) in the image where a small change in any direction results in a large change in intensity if one considers a small window centered on \((x, y)\)} (or, intuitively, one can imagine looking at the image through a tiny hole that’s centered at \((x, y)\)). This can be contrasted with \textit{edges}, where a large intensity change occurs in only one direction, or \textit{flat regions} where moving in any direction will result in small or no intensity changes. Hence, the Harris Corner Detector considers small windows (or patches) where a small change in location leads to large variation in multiple directions (hence corner detector).
+
+Let’s consider a grayscale image where \(I(x, y)\) is the intensity value at image location \((x, y)\). We can calculate the corner score for every pixel \((i, j)\) in the image by comparing a window \(W\) centered on \((i, j)\) with that same window centered at \((i + u, j + v)\). To be specific: a window of size \(2d + 1\) centered on \((i, j)\) is the set of pixels between \(i - d\) to \(i + d\) and \(j - d\) to \(j + d\). Specifically, we will compute the sum of square differences between the two,  
+\begin{equation}
+    E(u, v) = \sum_{x, y \in W} \Big[I(x + u, y + v) - I(x, y)\Big]^2,
+\end{equation}
+or, for every pixel \((x, y)\) in the window \(W\) centered at \((i, j)\), how different it is from the same window, shifted over \((u, v)\). This formalizes the intuitions above:
+\begin{itemize}
+    \item If moving \((u, v)\) leads to no change for all \((u, v)\), then \((x, y)\) is probably flat.
+    \item If moving \((u, v)\) in one direction leads to a big change and adding \((u, v)\) in another direction leads to a small change in the appearance of the window, then \((x, y)\) is probably on an edge.
+    \item If moving any \((u, v)\) leads to a big change in appearance of the window, then \((x, y)\) is a corner.
+\end{itemize}
+
+You can compute this \(E(u, v)\) for all \((u, v)\) and all \((i, j)\).
+
+\vspace{1em}
+
+\noindent
+\textbf{Task 5: Corner Score (9 pts)} 
+Your first task is to write a function that calculates this function for all pixels \((i, j)\) with a \textbf{fixed offset \((u, v)\)} and window size \(W\). In other words, if we calculate \(S = \texttt{corner\_score}(u, v)\), \(S\) is an image such that \(S_{ij}\) is the sum-of-squared differences between the window centered on \((i, j)\) in \(I\) and the window centered on \((i + u, j + v)\) in \(I\). The function will need to calculate this function to every location in the image. This is doable via a quadruple for-loop (for every pixel \((i, j)\), for every pixel \((x, y)\) in the window centered at \((i, j)\), compare the two). However, you can also imagine doing this by (a) offsetting the image by \((u, v)\); (b) taking the squared difference with the original image; (c) summing up the values within a window using convolution. \textbf{Note:} If you do this by convolution, use \textbf{zero padding} for outside-of-the-image values.
+
+\begin{enumerate}[label=(\alph*)]
+    \item \textcolor{red}{\textbf{Coding 5.1 - Complete the function} }\texttt{corner\_score()} in \texttt{corners.py} which takes as input an image, offset values \((u, v)\), and window size \(W\). The function computes the response \(E(u, v)\) for every pixel. We can look at, for instance, the image of \(E(0, y)\) to see how moving down \(y\) pixels would change things and the image of \(E(x, 0)\) to see how moving right \(x\) pixels would change things. {(3 pts)}
+
+\textit{Advice:} You can use \texttt{np.roll} for offsetting by \(u\) and \(v\). If you look really carefully, you’ll notice that if you implement this function via \texttt{np.roll}, you’ll have to watch out for whether you roll by \(u, v\) or by \(-u, -v\) if you want to calculate this precisely correct. Don’t worry about this flip ambiguity. Here’s why: in practice, if you were to use this corner score, you would try a whole set of \(u\)s and \(v\)s and aggregate the results (e.g., max, mean). In particular, for every \(u, v\), you would also try \(-u, -v\).
+
+%\begin{enumerate}[label=(\alph*)]
+    \item \textcolor{blue}{\textbf{Report 5.1 - Plot and put in your report}} your output for \texttt{grace\_hopper.png} for \((u, v) = \{(0, 5), (0, -5), (5, 0), (-5, 0)\}\) and window size \((5, 5)\). (3 pts)
+    
+    \item Early work by Moravec [1980] used this function to find corners by computing \(E(u, v)\) for a range of offsets and then selecting the pixels where the corner score is high for all offsets.
+    
+    \textbf{\textcolor{blue}{Report 5.2 - Discuss in your report}} why checking all the \(u\)s and \(v\)s might be impractical in a few sentences. (3 pts)
+\end{enumerate}
+
+\textit{Foreword:} For every single pixel \((i, j)\), you now have a way of computing how much changing by \((u, v)\) changes the appearance of a window (i.e., \(E(u, v)\) at \((i, j)\)). But in the end, we really want a single number of “cornerness” per pixel and don’t want to handle checking all the \((u, v)\) values at every single pixel \((i, j)\). You’ll implement the cornerness score invented by Harris and Stephens [1988].
+
+Harris and Stephens recognized that if you do a Taylor series of the image, you can build an approximation of \(E(u, v)\) at a pixel \((i, j)\). Specifically, if \(I_x\) and \(I_y\) denote the image of the partial derivatives of \(I\) with respect to \(x\) and \(y\) (computable via \(k_x\) and \(k_y\) from above), then:
+\[
+E(u, v) \approx \sum_W \begin{bmatrix} I_x^2 & I_x I_y \\ I_x I_y & I_y^2 \end{bmatrix} \begin{bmatrix} u \\ v \end{bmatrix} [u, v]^T = [u, v] M [u, v]^T,
+\]
+where \(M\) has all the information needed to approximate how rapidly the image content changes within a window near each pixel and you can compute \(M\) at every single pixel \((i, j)\) in the image. To avoid extreme notation clutter, we assume we are always talking about some fixed pixel \((i, j)\), the sums are over \(x, y\) in a \(2d + 1\) window \(W\) centered at \((i, j)\) and any image (e.g., \(I_x\) is assumed to be indexed by \(x, y\)). But in the interest of making this explicit, we want to compute the matrix \(M\) at \((i, j)\). The top-left and bottom-right elements of the matrix \(M\) for pixel \((i, j)\) are:
+\[
+M[0, 0] = \sum_{i = -d}^{x=d} \sum_{j = -d}^{y=d} I_x(x, y)^2 \quad \text{and} \quad M[1, 1] = \sum_{i = -d}^{x=d} \sum_{j = -d}^{y=d} I_y(x, y)^2.
+\]
+
+If you look carefully, you may be able to see that you can do this by convolution – with a filter that sums things up.
+
+What does this do for our lives? We can decompose the \(M\) we compute at each pixel into a rotation matrix \(R\) and diagonal matrix \(\text{diag}(\lambda_1, \lambda_2)\) such that (specifically an eigen-decomposition):
+\[
+M = R^{-1} \text{diag}(\lambda_1, \lambda_2) R,
+\]
+where the columns of \(R\) tell us the directions that \(E(u, v)\) most and least rapidly changes, and \(\lambda_1, \lambda_2\) tell us the maximum and minimum amount it changes. In other words, if both \(\lambda_1\) and \(\lambda_2\) are big, then we have a corner; if only one is big, then we have an edge; if neither are big, then we are on a flat part of the image. Unfortunately, finding eigenvectors can be slow, and Harris and Stephens were doing this over 30 years ago. Harris and Stephens had two other tricks up their sleeve. First, rather than calculate the eigenvalues directly, for a 2x2 matrix, one can compute the following score, which is a reasonable measure of what the eigenvalues are like:
+\[
+R = \lambda_1 \lambda_2 - \alpha (\lambda_1 + \lambda_2)^2 = \det(M) - \alpha \operatorname{trace}(M)^2
+\]
+which is far easier since the determinants and traces of a 2x2 matrix can be calculated very easily (look this up). Pixels with large positive \( R \) are corners; pixels with large negative \( R \) are edges; and pixels with low \( R \) are flat. In practice, \( \alpha \) is set to something between 0.04 and 0.06. Second, the sum that’s being done weights pixels across the window equally, when we know this can cause trouble. So instead, Harris and Stephens computed a \( M \) where the contributions of \( I_x \) and \( I_y \) for each pixel \((i, j)\) were weighted by a Gaussian kernel.
+
+\vspace{1em}
+
+\noindent
+\textbf{Task 6: Harris Corner Detector (13 pts)} 
+
+
+\begin{enumerate}[label=(\alph*)]
+    \item \textcolor{red}{\textbf{Coding 6.1 - Implement this optimization by completing the \texttt{harris\_detector()}}} function in \texttt{corners.py}. (10 pts)
+    
+    You cannot call a library function that has already implemented the Harris Corner Detector to solve the task. You can, however, look at where Harris corners are to get a sense of whether your implementation is doing well.
+
+    \item Generate a Harris Corner Detector score for every point in the \texttt{grace\_hopper.png} image. \textbf{\textcolor{blue}{Report 6.1 - Plot and include in your report}} these scores as a heatmap. (3 pts)
+\end{enumerate}
+
+\subsubsection*{Walk-through or How do I implement it?}
+
+\begin{enumerate}
+    \item In your implementation, you should first figure out how to calculate \( M \) for all pixels just using a straightforward sum.
+
+    You can compute it by brute force (quadruple for-loop) or convolution (just summing over a window). In general, it’s usually far easier to write a slow-and-not-particularly-clever version that does it brute force. This is often a handful of lines and requires not so much thinking. You then write a version that is convolutional and faster but requires some thought. This way, if you have a bug, you can compare with the brute-force version that you are pretty sure has no issues.
+
+    You can store \( M \) as a 3-channel image where, for each pixel \((i, j)\), you store \( M_{1,1} \) in the first channel, \( M_{1,2} \) in the second and \( M_{2,2} \) in the third. Storing \( M_{2,1} \) is unnecessary since it is the same as \( M_{1,2} \).
+
+    \item You should then figure out how to convert \( M \) at every pixel into \( R \) at every pixel. This requires det (\( \det \)) and trace (\( \operatorname{trace} \)) that have closed-form expressions for 2x2 matrices that you can (and should!) look up. Additionally, these are expressions that you can do via element-wise operations (+, *) on the image representing the elements of \( M \) per pixel.
+
+    \item Finally, you should switch out summing over the window (by convolution or brute force) to summing over the window with a Gaussian weight and by convolution. The resulting operation will be around a small number of cryptic lines that look like magic but which are doing something sensible under the hood.
+\end{enumerate}
+ 
+
+\newpage
+\section{Blob Detection (24 pts)}
+
+One of the great benefits of computer vision is that it can greatly simplify and automate otherwise tedious tasks. For example, in some branches of biomedical research, researchers often have to count or annotate specific particles in microscopic images such as the one seen below. Aside from being a very tedious task, this task can be very time consuming as well as error-prone. During this course, you will learn about several algorithms that can be used to detect, segment, or even classify cells in those settings. In this part of the assignment, you will use the DoG filters from part 2 along with a scale-space representation to count the number of cells in microscopy images.
+
+\begin{figure}[h!]
+    \centering
+        
+    
+    % Placeholder for the image
+    %\begin{minipage}
+    
+    \includegraphics{figures/figure_2.png}
+    
+    \caption{Detected Lymphocytes in breast cancer \\ 
+    pathology images. Dots = annotations, \\
+    Boundaries = detections. Source: Oxford VGG}
+    %\end{minipage}
+   
+\end{figure}
+
+\textbf{Note:} We have provided you with helper functions in \texttt{common.py}: \texttt{visualize\_scale\_space}, \texttt{visualize\_maxima}, and \texttt{find\_maxima}. The first two functions visualize the outputs for your scale space and detections, respectively. The last function detects maxima within some local neighborhood as defined by the function inputs. Those three functions are intended to help you inspect the results for different parameters with ease. The last two parts of this question require a degree of experimenting with different parameter choices, and visualizing the results of the parameters and understanding how they impact the detections is crucial to choosing good parameters. Use \texttt{scipy.ndimage.convolve()} to perform convolution whenever required. \textbf{Please use reflect padding. (Set \texttt{mode=`reflect'})}
+
+\vspace{1em}
+
+\noindent
+\textbf{Task 7: Single-scale Blob Detection (15 pts)} 
+
+\begin{enumerate}[label=(\alph*)]
+    \item \textbf{\textcolor{red}{Coding 7.1 - Implement the function \texttt{gaussian\_filter}} in \texttt{blob\_detection.py}} that takes as an input an image and the standard deviation, \( \sigma \), for a Gaussian filter and returns the Gaussian filtered image. Read in \texttt{`polka.png`} as a gray-scale image and find two pairs of \( \sigma \) values for a DoG such that the first set responds highly to the small circles, while the second set only responds highly to the large circles. For choosing the appropriate \( \sigma \) values, note that the radius and standard deviation of a Gaussian such that the Laplacian of Gaussian has maximum response are related by the following equation: \( r = \sigma \sqrt{2} \). (10 pts)
+
+    \item \textcolor{blue}{\textbf{Report 7.1 - Plot and include in your report the two responses and report the parameters used to obtain each.}} Comment in your report on the responses in a few lines: how many maxima are you observing? Are there false peaks that are getting high values? (5 pts)
+\end{enumerate}
+
+\noindent
+\textbf{Task 8: Cell Counting (9 pts)} 
+
+In computer vision, we often have to choose the correct set of parameters depending on our problem space (or learn them; more on that later in the course). Your task here is to apply blob detection to find the number of cells in the images found in the \texttt{/cells} folder. For the report, we will focus on a small sample of images: \texttt{001cell.png}, \texttt{051cell.png}, \texttt{101cell.png}, \texttt{151cell.png}.
+
+This assignment is deliberately meant to be open-ended. Your detections don’t have to be perfect. You will be primarily graded on showing that you tried a few different things and your analysis of your results. You are free to use multiple scales and whatever tricks you want for counting the number of cells.
+
+\begin{enumerate}[label=(\alph*)]
+    \item \textcolor{blue}{\textbf{Report 8.1 - Find and include in your report}} a set of parameters for generating the scale space and finding the maxima that allows you to accurately detect the cells in each of those images. Feel free to pre-process the images or the scale space output to improve detection. \textcolor{blue}{\textbf{Include in your report}} the number of detected cells for each of the images as well. {(4 pts)}
+
+    \textit{Note:} You should be able to follow the steps we gave for detecting small dots and large dots for finding maxima, plotting the scale space and visualizing maxima for your selected cells.
+
+    \item \textcolor{blue}{\textbf{Report 8.2 - Include in your report}} the visualized blob detection for each of the images and discuss the results obtained as well as any additional steps you took to improve the cell detection and counting. \textcolor{red}{\textbf{Include those images in your zip file under \textit{cell\_detections} as well.}} (5 pts)
+\end{enumerate}
+
+% As a sanity check, we provided you the detections on \\texttt{/cells/001cell.png} sample for a specific set of parameter configurations in Fig.\ref{fig:input-cell}  and \ref{fig:detected-blobs}. As you can see our settings detected a total of $\approx 121$ blobs among which True Positives (TP): $\approx 88$ and True Negatives (TN): $\approx 33$. If your TP detections are $> 80$ and FP detections are $< 40$ on \\texttt{/cells/001cell.png} image it is highly likely that your parameter configuration is correct. For submission please choose any four images except the \\texttt{001cell.png} from \\texttt{/cells} folder and include them in the report.
+
+% \begin{figure}[h!]
+%     \centering
+%     \begin{subfigure}[b]{0.45\textwidth}
+%         \includegraphics[width=\textwidth]{figures/figure_3_a.png}
+%         \caption{Input cell image}
+%         \label{fig:input-cell}
+%     \end{subfigure}
+%     \hfill
+%     \begin{subfigure}[b]{0.45\textwidth}
+%         \includegraphics[width=\textwidth]{figures/figure_3_b.png}
+%         \caption{Detected blobs}
+%         \label{fig:detected-blobs}
+%     \end{subfigure}
+%     \caption{Blobs detected on \texttt{001cell.png} input image for a particular parameter configuration.}
+%     \label{fig:cell-detection}
+% \end{figure}
+
+\textit{Note:} The images come from a project from the Visual Geometry Group at Oxford University, and have been used in a recent research paper that focuses on counting cells and other objects in images; you can check their work \href{https://www.robots.ox.ac.uk/~vgg}{here}.
+
+% \footnotesize
+% $^1$ In our case true positives correspond to correctly detected blobs and 
+% true negatives correspond to incorrectly detected blobs.
+
+\newpage
+
+% \section*{Submission Checklist}
+
+% In the \texttt{zip} file you submit to Gradescope, the directory named after your EID should include the following files:
+
+% \begin{itemize}
+%     \item \texttt{filters.py}
+%     \item \texttt{corners.py}
+%     \item \texttt{blob\_detection.py}
+%     \item \texttt{common.py}
+%     \item \texttt{image\_patches:} directory with the detected image patches in it.
+%     \item \texttt{gaussian\_filter:} directory with filtered image and edge responses.
+%     \item \texttt{sobel\_operator:} directory with Sobel filtered outputs.
+%     \item \texttt{log\_filter:} directory with LoG response outputs.
+%     \item \texttt{feature\_detection:} directory with Harris and Corner detections.
+%     \item \texttt{polka\_detections:} directory with polka detection outputs.
+%     \item \texttt{cell\_detections:} directory with cell detection outputs.
+% \end{itemize}
+
+% The rest should be all included in your \texttt{pdf} report submitted to Gradescope.
+
+\section*{References}
+
+\noindent
+C. Harris and M. Stephens, \textit{``Combined Corner and Edge Detector''} in Proceedings of the Alvey Vision Conference 1988, Manchester, 1988, pp. 23.1-23.6.
+
+\vspace{0.3em}
+\noindent
+H. Moravec, \textit{``Obstacle Avoidance and Navigation in the Real World by a Seeing Robot Rover'',} Tech Report CMU-RI-TR-3, Carnegie-Mellon University, Robotics Institute, September 1980.
+
+\vspace{0.3em}
+\noindent
+Lowe, David G. \textit{``Distinctive image features from scale-invariant keypoints.''} International Journal of Computer Vision 60.2 (2004): 91-110.
+
+\vspace{0.3em}
+\noindent
+\url{https://en.wikipedia.org/wiki/Feature_detection_(computer_vision)}
+
+\vspace{0.3em}
+\noindent
+Cell counting project: \url{https://www.robots.ox.ac.uk/~vgg/research/counting/index_org.html}
+
+
+\section*{References and Credits}
+Part of this homework is taken from UMich EECS 442 by David Fouhey.
+
+\end{document}

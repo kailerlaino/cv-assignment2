@@ -1,0 +1,137 @@
+% LaTeX packages and configurations for CS 376 Computer Vision assignments
+% This file contains all the necessary packages and settings that can be reused across multiple LaTeX documents
+% This file is used in the main.tex file to import the packages and settings
+
+% Math packages
+\usepackage{amsmath, amssymb}
+
+% Page layout
+\usepackage{geometry}
+\geometry{margin=1in}
+
+% Hyperlinks
+\usepackage{hyperref}
+\hypersetup{
+    colorlinks=true,
+    linkcolor=blue,
+    urlcolor=blue
+}
+
+% Graphics and figures
+\usepackage{graphicx}
+\usepackage{caption}  % For custom captions
+\usepackage{subcaption} % For subfigures
+\usepackage{float}    % For [H] placement
+
+% Code listings
+\usepackage{listings}   % For code blocks
+\usepackage{xcolor}     % For text coloring
+\usepackage{verbatim}   % For verbatim environments
+
+% Drawing and plotting
+\usepackage{tikz}
+\usepackage{pgfplots}
+\pgfplotsset{compat=1.17}
+
+% Tables and arrays
+\usepackage{array}    % For centering titles
+
+% Lists and enumeration
+\usepackage{enumitem}
+
+% Colored boxes
+\usepackage{tcolorbox}
+
+% Section formatting
+\usepackage{titlesec}
+\titleformat{\section}{\normalfont\Large\bfseries}{\thesection}{1em}{}
+
+% Paragraph spacing settings
+\setlength{\parindent}{0pt}    % No indentation
+\setlength{\parskip}{5pt}      % Small vertical space between paragraphs
+
+% Define custom colors
+\definecolor{codebg}{rgb}{0.95, 0.95, 1.0}    % Light purple background
+\definecolor{commentred}{rgb}{0.7, 0.0, 0.0}  % Dark red for comments
+\definecolor{keywordblue}{rgb}{0.0, 0.0, 0.8} % Dark blue for keywords
+
+% Configure listings environment for Python
+\lstset{
+    language=Python,                        % Set language to Python
+    basicstyle=\ttfamily\small,             % Monospaced small font
+    commentstyle=\color{commentred},        % Red comments
+    keywordstyle=\color{black}\bfseries,    % Bold black for keywords
+    stringstyle=\color{black},              % Black for strings
+    backgroundcolor=\color{codebg},         % Light purple background
+    showstringspaces=false,                 % Hide spaces in strings
+    frame=single,                           % Single-line border
+    rulecolor=\color{codebg},               % Border matches background
+    tabsize=4,                              % Tab size
+    breaklines=true,                        % Line wrapping
+    numbers=left,                           % Line numbers on the left
+    numberstyle=\tiny\color{gray},          % Line number style
+    captionpos=b,                           % Caption position
+}
+
+% Configure the listings environment for bash
+\lstset{
+    language=bash,
+    basicstyle=\ttfamily\small,            % Small typewriter font
+    backgroundcolor=\color{codebg},        % Light blue background
+    frame=single,                          % Add a border around the code
+    rulecolor=\color{gray},                % Gray border
+    showstringspaces=false,                % Do not show spaces
+    breaklines=true,                       % Break long lines
+    numbers=left,                          % Line numbers on the left
+    numberstyle=\tiny\color{gray},         % Style for line numbers
+    numbersep=10pt,                        % Spacing for line numbers
+}
+
+% Define colormaps for pgfplots
+\pgfplotsset{
+    colormap={plasma}{
+        rgb255=(12,7,134)   % Dark purple
+        rgb255=(92,25,138)
+        rgb255=(175,53,124)
+        rgb255=(216,80,102)
+        rgb255=(239,117,77)
+        rgb255=(251,160,61)
+        rgb255=(254,207,55)
+        rgb255=(246,251,75) % Bright yellow
+    }
+}
+
+\pgfplotsset{
+    colormap={magma}{
+        rgb255=(0, 0, 4)
+        rgb255=(28, 16, 68)
+        rgb255=(79, 18, 123)
+        rgb255=(129, 37, 129)
+        rgb255=(181, 54, 122)
+        rgb255=(223, 90, 105)
+        rgb255=(252, 148, 84)
+        rgb255=(252, 208, 122)
+        rgb255=(252, 253, 191)
+    }
+}
+
+\pgfplotsset{
+    colormap={grayscale}{
+        rgb255=(0, 0, 0)      % Black
+        rgb255=(255, 255, 255)% White
+    }
+}
+
+% Define custom colors for debugging hints
+\definecolor{customred}{rgb}{0.75,0.2,0.2}     % Red shade
+\definecolor{customblue}{rgb}{0.2,0.4,0.8}     % Blue shade
+\definecolor{customyellow}{rgb}{0.8,0.7,0.2}   % Yellow shade
+\definecolor{custommagenta}{rgb}{0.8,0.3,0.4}  % Magenta shade
+\definecolor{custombrown}{rgb}{0.6,0.5,0.2}    % Brown shade
+
+% Define styles for lettered sections (A, B, C...)
+\newcommand{\lettersection}[1]{%
+  \refstepcounter{lettersection}% Increment the lettersection counter
+  \section*{B.\Alph{lettersection} \quad #1}% Print as "B. A", "B. B", etc.
+  \addcontentsline{toc}{section}{B.\Alph{lettersection} \quad #1} % Add to TOC
+}

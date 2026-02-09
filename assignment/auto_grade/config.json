@@ -1,0 +1,53 @@
+{
+    "assignment_name": "HW2 - Image Processing and Edge Detection",
+    "required_files": [
+        "filters.py",
+        "corners.py"
+    ],
+    "optional_files": [
+        "unit_tests_1_1.py",
+        "unit_tests_2_1.py",
+        "unit_tests_2_2.py",
+        "unit_tests_3_1.py",
+        "unit_tests_5_1.py",
+        "unit_tests_6_1.py",
+        "unit_tests_7_1.py"
+    ],
+    "tests": [
+        {
+            "test_file": "unit_tests_1_1.py",
+            "points": 1,
+            "description": "1_1_image_patches"
+        },
+        {
+            "test_file": "unit_tests_2_1.py",
+            "points": 1,
+            "description": "2_1_convolve"
+        },
+        {
+            "test_file": "unit_tests_2_2.py",
+            "points": 1,
+            "description": "2_2_edge_detection"
+        },
+        {
+            "test_file": "unit_tests_3_1.py",
+            "points": 1,
+            "description": "3_1_sobel_operator"
+        },
+        {
+            "test_file": "unit_tests_5_1.py",
+            "points": 1,
+            "description": "5_1_corner_score"
+        },
+        {
+            "test_file": "unit_tests_6_1.py",
+            "points": 1,
+            "description": "6_1_harris_detector"
+        },
+        {
+            "test_file": "unit_tests_7_1.py",
+            "points": 1,
+            "description": "7_1_gaussian_filter"
+        }
+    ]
+}
