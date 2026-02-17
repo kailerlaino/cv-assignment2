@@ -16,7 +16,13 @@ def image_patches(image, patch_size=(16, 16)):
     Output- results: a list of images of size M x N
     """
     # TODO: Use slicing to complete the function
+    H, W = image.shape
+    h, w = patch_size
     output = []
+    for i in range(0, H, h):
+        for j in range(0, W, w):
+            patch = image[i:i+h, j:j+w]
+            output.append((patch - np.mean(patch)) / (np.std(patch)))
     return output
 
 
