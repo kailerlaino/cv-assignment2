@@ -36,7 +36,39 @@ def convolve(image, kernel):
            kernel: h x w
     Output- convolve: H x W
     """
-    output = None
+    convolved_kernel = kernel[::-1, ::-1]
+
+    h, w = kernel.shape
+    H, W = image.shape
+
+
+    pad_h_top = (h - 1) // 2
+    pad_h_bot = h // 2
+    
+    pad_w_left = (w - 1) // 2
+    pad_w_right = w // 2
+
+    padded_image = np.pad(image, (
+        (pad_h_top, pad_h_bot), 
+        (pad_w_left, pad_w_right)
+    ), mode='constant')
+
+    output = np.zeros((H,W))
+    for i in range(H):
+        for j in range(W):
+            sum = 0
+            for k in range(h):
+                for l in range(w):
+                    sum += padded_image[i+k][j+l] * convolved_kernel[k][l]
+            output[i][j] = sum
+
+    print("image", image)
+    print("kernel", kernel)
+    print("My convolve", output)
+    print("SciPy convolve", scipy.ndimage.convolve(image, kernel, mode='constant'))
+    # used to check work and for later method 
+
+    
     return output
 
 
