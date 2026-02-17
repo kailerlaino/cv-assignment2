@@ -74,14 +74,14 @@ def edge_detection(image):
     Output- Ix, Iy, grad_magnitude: H x W
     """
     # TODO: Fix kx, ky
-    kx = None  # 1 x 3
-    ky = None  # 3 x 1
+    kx = np.array([[-1, 0, 1]])  # 1 x 3
+    ky = np.array([[-1], [0], [1]]) # 3 x 1
 
     Ix = convolve(image, kx)
     Iy = convolve(image, ky)
 
     # TODO: Use Ix, Iy to calculate grad_magnitude
-    grad_magnitude = None
+    grad_magnitude = np.sqrt(np.power(Ix, 2) + np.power(Iy, 2))
 
     return Ix, Iy, grad_magnitude
 
@@ -94,7 +94,10 @@ def sobel_operator(image):
     Output- Gx, Gy, grad_magnitude: H x W
     """
     # TODO: Use convolve() to complete the function
-    Gx, Gy, grad_magnitude = None, None, None
+    Sx = np.array([[1, 0, -1], [2, 0, -2], [1, 0, -1]])
+    Sy = np.array([[1, 2, 1], [0, 0, 0], [-1, -2, -1]])
+    Gx, Gy = convolve(image, Sx), convolve(image, Sy)
+    grad_magnitude = np.sqrt(np.power(Gx, 2) + np.power(Gy, 2))
 
     return Gx, Gy, grad_magnitude
 
