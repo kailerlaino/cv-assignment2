@@ -1,6 +1,7 @@
 import os
 
 import numpy as np
+import random
 
 from common import read_img, save_img
 
@@ -36,12 +37,16 @@ def convolve(image, kernel):
            kernel: h x w
     Output- convolve: H x W
     """
+    # I think this kernel can be decomposed using SVD? but I'll save that for
+    # if I have extra time
+    H, W = image.shape
+    h, w = kernel.shape
     convolved_kernel = kernel[::-1, ::-1]
 
-    h, w = kernel.shape
-    H, W = image.shape
 
 
+    # had to so some convoluted stuff (haha) to get the zero padding to match
+    # how scipy does the 
     pad_h_top = (h - 1) // 2
     pad_h_bot = h // 2
     
@@ -56,19 +61,8 @@ def convolve(image, kernel):
     output = np.zeros((H,W))
     for i in range(H):
         for j in range(W):
-            sum = 0
-            for k in range(h):
-                for l in range(w):
-                    sum += padded_image[i+k][j+l] * convolved_kernel[k][l]
-            output[i][j] = sum
-
-    print("image", image)
-    print("kernel", kernel)
-    print("My convolve", output)
-    print("SciPy convolve", scipy.ndimage.convolve(image, kernel, mode='constant'))
-    # used to check work and for later method 
-
-    
+            region = padded_image[i:i+h, j:j+w]
+            output[i][j] = np.sum(region * convolved_kernel)
     return output
 
 
