@@ -134,7 +134,16 @@ def main():
     # (c)
     # Calculate the Gaussian kernel described in the question.
     # There is tolerance for the kernel.
-    kernel_gaussian = None
+    sigma = 0.572
+    xx = np.array([[-1, 0, 1]]) 
+    yy = np.array([[-1], [0], [1]])
+
+    x_gauss = (1 / (np.sqrt(2 * np.pi) * sigma)) * np.exp(-((xx**2) / (2 * sigma**2)))
+    y_gauss = (1 / (np.sqrt(2 * np.pi) * sigma)) * np.exp(-((yy**2) / (2 * sigma**2)))
+    
+    kernel_gaussian = np.outer(x_gauss, y_gauss)
+    # normalize kernel to prevent changes in brightness
+    kernel_gaussian = kernel_gaussian / np.sum(kernel_gaussian)
 
     filtered_gaussian = convolve(img, kernel_gaussian)
     save_img(filtered_gaussian, "./gaussian_filter/q2_gaussian.png")
