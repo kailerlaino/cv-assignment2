@@ -193,8 +193,8 @@ def main():
                             [3, 3, 5, 3, 0, 3, 5, 3, 3],
                             [0, 2, 3, 5, 5, 5, 3, 2, 0],
                             [0, 0, 3, 2, 2, 2, 3, 0, 0]])
-    filtered_LoG1 = None
-    filtered_LoG2 = None
+    filtered_LoG1 = convolve(img, kernel_LoG1)
+    filtered_LoG2 = convolve(img, kernel_LoG2)
     # Use convolve() to convolve img with kernel_LOG1 and kernel_LOG2
     save_img(filtered_LoG1, "./log_filter/q1_LoG1.png")
     save_img(filtered_LoG2, "./log_filter/q1_LoG2.png")
