@@ -63,6 +63,18 @@ def harris_detector(image, window_size=(5, 5)):
 
     return response
 
+def save_heatmap(R, filename):
+    """
+    Plots the response R as a heatmap and saves it.
+    """
+    plt.figure(figsize=(8, 6))
+    plt.imshow(R, cmap='jet') # 'jet' or 'hot' are standard for heatmaps
+    plt.colorbar(label='Harris Response Score')
+    plt.title('Harris Corner Detector Heatmap')
+    plt.axis('off')
+    plt.savefig(filename)
+    plt.close()
+
 
 def main():
     img = read_img('./grace_hopper.png')
@@ -100,9 +112,14 @@ def main():
     # (a): Complete harris_detector()
 
     # (b)
-    harris_corners = harris_detector(img)
-    save_img(harris_corners, "./feature_detection/harris_response.png")
+    if not os.path.exists("./harris_corner"):
+        os.makedirs("./harris_corner")
 
+    harris_response = harris_detector(img)
+    
+    # Pass the full path to the save function
+    save_heatmap(harris_response, "./harris_corner/q6_heatmap.png")
+    print(f"./harris_corner/q6_heatmap.png is saved!")
 
 if __name__ == "__main__":
     main()
