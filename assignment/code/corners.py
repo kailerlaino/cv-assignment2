@@ -2,6 +2,7 @@ import os
 
 import numpy as np
 import scipy.ndimage
+import matplotlib.pyplot as plt
 # Use scipy.ndimage.convolve() for convolution.
 # Use zero padding (Set mode = 'constant'). Refer docs for further info.
 
@@ -88,10 +89,10 @@ def main():
 
     # (b)
     # Define offsets and window size and calulcate corner score
-    u, v, W = None, None, None
+    W = (5, 5)
 
-    score = corner_score(img, u, v, W)
-    save_img(score, "./feature_detection/corner_score.png")
+    # score = corner_score(img, u, v, W)
+    # save_img(score, "./feature_detection/corner_score.png")
 
     # Computing the corner scores for various u, v values.
     score = corner_score(img, 0, 5, W)

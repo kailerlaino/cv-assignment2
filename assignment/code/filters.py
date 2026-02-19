@@ -117,8 +117,10 @@ def main():
     patches = image_patches(img)
     # Now choose any three patches and save them
     # chosen_patches should have those patches stacked vertically/horizontally
-    chosen_patches = None
-    save_img(chosen_patches, "./image_patches/q1_patch.png")
+    indices = random.sample(range(len(patches)), 3)
+    p1, p2, p3 = [patches[i] for i in indices]  
+    chosen_patches_horizontal = np.hstack((p1, p2, p3))    
+    save_img(chosen_patches_horizontal, "./image_patches/q1_patch.png")
 
     # (b), (c): No code
 
@@ -145,8 +147,8 @@ def main():
     # normalize kernel to prevent changes in brightness
     kernel_gaussian = kernel_gaussian / np.sum(kernel_gaussian)
 
-    filtered_gaussian = convolve(img, kernel_gaussian)
-    save_img(filtered_gaussian, "./gaussian_filter/q2_gaussian.png")
+    filtered_img = convolve(img, kernel_gaussian)
+    save_img(filtered_img, "./gaussian_filter/q2_gaussian.png")
 
     # (d), (e): No code
 
@@ -157,7 +159,7 @@ def main():
     # for the orignal and gaussian filtered images.
     _, _, edge_detect = edge_detection(img)
     save_img(edge_detect, "./gaussian_filter/q3_edge.png")
-    _, _, edge_with_gaussian = edge_detection(filtered_gaussian)
+    _, _, edge_with_gaussian = edge_detection(filtered_img)
     save_img(edge_with_gaussian, "./gaussian_filter/q3_edge_gaussian.png")
 
     print("Gaussian Filter is done. ")
@@ -202,6 +204,33 @@ def main():
     # (b)
     # Follow instructions in pdf to approximate LoG with a DoG
     print("LoG Filter is done. ")
+    import matplotlib.pyplot as plt
+
+    # (b) LoG Approximation with DoG
+    # Load the 1D filters provided in the homework package
+    # Load the 1D filters
+    data = np.load('log1d.npz')
+    log50 = data['log50']
+    gauss50 = data['gauss50']
+    gauss53 = data['gauss53']
+
+    # 1. Reverse the subtraction to match the LoG sign
+    # 2. Normalize both to have the same peak-to-peak amplitude for visual comparison
+    dog_raw = gauss53 - gauss50
+
+    # Optional: Normalize for better visual comparison in the report
+    log50_norm = log50 / np.max(np.abs(log50))
+    dog_norm = dog_raw / np.max(np.abs(dog_raw))
+
+    plt.figure(figsize=(10, 6))
+    plt.plot(log50_norm, label='Normalized LoG ($\sigma=50$)', linewidth=2)
+    plt.plot(dog_norm, label='Normalized DoG ($G_{53} - G_{50}$)', linestyle='--')
+    plt.title('Normalized Comparison: LoG vs DoG Approximation')
+    plt.xlabel('Index')
+    plt.ylabel('Normalized Weight')
+    plt.legend()
+    plt.grid(True)
+    plt.show()
 
 
 if __name__ == "__main__":
