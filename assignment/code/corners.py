@@ -22,7 +22,13 @@ def corner_score(image, u=5, v=5, window_size=(5, 5)):
 
     Output- results: a image of size H x W
     """
-    output = None
+    shifted_image = np.roll(image, shift=(v, u), axis=(0, 1))
+    
+    squared_diff = (image - shifted_image) ** 2
+    
+    kernel = np.ones(window_size)
+    
+    output = scipy.ndimage.convolve(squared_diff, kernel, mode='constant', cval=0.0)
     return output
 
 
@@ -36,16 +42,24 @@ def harris_detector(image, window_size=(5, 5)):
     Output- results: a image of size H x W
     """
     # compute the derivatives
-    Ix = None
-    Iy = None
+    Ix = scipy.ndimage.convolve(image, np.array([[-1, 0, 1]]), mode='constant')
+    Iy = scipy.ndimage.convolve(image, np.array([[-1], [0], [1]]), mode='constant')
 
-    Ixx = None
-    Iyy = None
-    Ixy = None
+    Ixx = Ix * Ix
+    Iyy = Iy * Iy
+    Ixy = Ix * Iy
 
-    # For each image location, construct the structure tensor and calculate
-    # the Harris response
-    response = None
+    window_kernel = np.ones(window_size)
+    
+    Sxx = scipy.ndimage.convolve(Ixx, window_kernel, mode='constant')
+    Syy = scipy.ndimage.convolve(Iyy, window_kernel, mode='constant')
+    Sxy = scipy.ndimage.convolve(Ixy, window_kernel, mode='constant')
+
+    det_M = (Sxx * Syy) - (Sxy ** 2)
+    trace_M = Sxx + Syy
+
+    k = 0.05
+    response = det_M - k * (trace_M ** 2)
 
     return response
 
