@@ -56,12 +56,13 @@ def main():
     # First, complete gaussian_filter()
     print("Detecting small polka dots")
     # -- Detect Small Circles
-    sigma_1, sigma_2 = None, None
-    gauss_1 = None  # to implement
-    gauss_2 = None  # to implement
+    # sigma_1, sigma_2 = 7.778174593, 3.5355339 
+    sigma_1, sigma_2 = 3.5, np.sqrt(2) * 3.5
+    gauss_1 = gaussian_filter(image, sigma_1)  # to implement
+    gauss_2 = gaussian_filter(image, sigma_2)  # to implement
 
     # calculate difference of gaussians
-    DoG_small = None  # to implement
+    DoG_small = gauss_2 - gauss_1 # to implement
 
     # visualize maxima
     maxima = find_maxima(DoG_small, k_xy=10)
@@ -72,12 +73,12 @@ def main():
 
     # -- Detect Large Circles
     print("Detecting large polka dots")
-    sigma_1, sigma_2 = None, None
-    gauss_1 = None  # to implement
-    gauss_2 = None  # to implement
+    sigma_1, sigma_2 = 7.7, np.sqrt(2) * 7.7
+    gauss_1 = gaussian_filter(image, sigma_1)  # to implement
+    gauss_2 = gaussian_filter(image, sigma_2)  # to implement
 
     # calculate difference of gaussians
-    DoG_large = None  # to implement
+    DoG_large = gauss_2 - gauss_1 # to implement
 
     # visualize maxima
     # Value of k_xy is a sugguestion; feel free to change it as you wish.
@@ -90,12 +91,66 @@ def main():
 
     # # -- TODO Task 8: Cell Counting --
     print("Detecting cells")
-
     # Detect the cells in any four (or more) images from vgg_cells
     # Create directory for cell_detections
     if not os.path.exists("./cell_detections"):
         os.makedirs("./cell_detections")
 
+    image = read_img('./cells/001cell.png')
+
+    sigma_1, sigma_2 = 4.25, 6
+    gauss_1 = gaussian_filter(image, sigma_1)  
+    gauss_2 = gaussian_filter(image, sigma_2)
+
+    DoG_cell = gauss_2 - gauss_1 
+
+    maxima = find_maxima(DoG_cell, k_xy=13)
+    visualize_scale_space(DoG_cell, sigma_1, sigma_2 / sigma_1,
+                          './cell_detections/cell_1_DoG.png')
+    visualize_maxima(image, maxima, sigma_1, sigma_2 / sigma_1,
+                     './cell_detections/cell_1.png')
+    
+    image = read_img('./cells/051cell.png')
+
+    sigma_1, sigma_2 = 4.25, 6
+    gauss_1 = gaussian_filter(image, sigma_1)
+    gauss_2 = gaussian_filter(image, sigma_2)
+
+    DoG_cell = gauss_2 - gauss_1 
+
+    maxima = find_maxima(DoG_cell, k_xy=12)
+    visualize_scale_space(DoG_cell, sigma_1, sigma_2 / sigma_1,
+                          './cell_detections/cell_51_DoG.png')
+    visualize_maxima(image, maxima, sigma_1, sigma_2 / sigma_1,
+                     './cell_detections/cell_51.png')
+    
+    image = read_img('./cells/101cell.png')
+
+    sigma_1, sigma_2 = 4.25, 6
+    gauss_1 = gaussian_filter(image, sigma_1)
+    gauss_2 = gaussian_filter(image, sigma_2) 
+
+    DoG_cell = gauss_2 - gauss_1 
+
+    maxima = find_maxima(DoG_cell, k_xy=14)
+    visualize_scale_space(DoG_cell, sigma_1, sigma_2 / sigma_1,
+                          './cell_detections/cell_101_DoG.png')
+    visualize_maxima(image, maxima, sigma_1, sigma_2 / sigma_1,
+                     './cell_detections/cell_101.png')
+    
+    image = read_img('./cells/151cell.png')
+
+    sigma_1, sigma_2 = 4.25, 6
+    gauss_1 = gaussian_filter(image, sigma_1)
+    gauss_2 = gaussian_filter(image, sigma_2)
+
+    DoG_large = gauss_2 - gauss_1 
+
+    maxima = find_maxima(DoG_large, k_xy=13)
+    visualize_scale_space(DoG_large, sigma_1, sigma_2 / sigma_1,
+                          './cell_detections/cell_151_DoG.png')
+    visualize_maxima(image, maxima, sigma_1, sigma_2 / sigma_1,
+                     './cell_detections/cell_151.png')
 
 
 if __name__ == '__main__':
